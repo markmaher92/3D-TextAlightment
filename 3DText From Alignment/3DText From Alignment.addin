@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Command">
+    <Text>Command 3DText From Alignment</Text>
+    <Description>Some description for 3DText From Alignment</Description>
+    <Assembly>3DText From Alignment.dll</Assembly>
+    <FullClassName>_3DText_From_Alignment.Command</FullClassName>
+    <ClientId>0fe5b4a3-5123-439d-9f1b-62582116f296</ClientId>
+    <VendorId>com.typepad.thebuildingcoder</VendorId>
+    <VendorDescription>The Building Coder, http://thebuildingcoder.typepad.com</VendorDescription>
+  </AddIn>
+  <AddIn Type="Application">
+    <Name>Application 3DText From Alignment</Name>
+    <Assembly>3DText From Alignment.dll</Assembly>
+    <FullClassName>_3DText_From_Alignment.App</FullClassName>
+    <ClientId>c5da3809-61df-4abe-a055-97b999dff718</ClientId>
+    <VendorId>com.typepad.thebuildingcoder</VendorId>
+    <VendorDescription>The Building Coder, http://thebuildingcoder.typepad.com</VendorDescription>
+  </AddIn>
+</RevitAddIns>
