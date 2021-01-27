@@ -15,7 +15,16 @@
         <TextBox Height="24" Margin="151.5,0,5,72" TextWrapping="Wrap" Text="0.5" VerticalAlignment="Bottom" Name="HorizontalDistancetext" Grid.Column="1"/>
         <Label Content="Distance Between Spaces" Margin="12,0,131,98" Height="26" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
         <Label Content="Horitzonal Distance" Margin="12,0,126,70" Height="26" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
-        <Button Content="Run" Margin="0,0,5,10" Click="Button_Click" Height="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="114" RenderTransformOrigin="0.513,0.8" Grid.Column="1"/>
+        <Button Content="Run" Margin="0,0,5,10" Click="Button_Click" Height="21" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="114" RenderTransformOrigin="0.513,0.8" Grid.Column="1">
+            <Button.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform AngleX="2.862"/>
+                    <RotateTransform/>
+                    <TranslateTransform X="-0.28"/>
+                </TransformGroup>
+            </Button.RenderTransform>
+        </Button>
         <Label Content="Starting Station" Margin="12,0,131,126" Height="26" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
         <TextBox Height="24" Margin="151.5,0,5,128" TextWrapping="Wrap" Text="" VerticalAlignment="Bottom" x:Name="StartingStationTxt" Grid.Column="1"/>
         <Label Content="Elevation From Line" Margin="12,0,153,44" Height="26" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
