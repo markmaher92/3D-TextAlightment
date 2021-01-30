@@ -104,6 +104,20 @@ namespace _3DText_From_Alignment
 
                 XYZ NormalVector = (Point2 - Point).Normalize();
                 double Angle = (Math.PI / 2) - NormalVector.AngleTo(XYZ.BasisX);
+
+                try
+                {
+
+                   Double RotationAngle =  UnitUtils.ConvertToInternalUnits(double.Parse(DegreesTxt.Text),DisplayUnitType.DUT_DEGREES_AND_MINUTES);
+                    Angle = Angle + RotationAngle;
+                }
+                catch (Exception)
+                {
+
+                    throw;
+                }
+
+
                 FamilySymbol Fam = (FamilySymbol)new FilteredElementCollector(uiDoc.Document).OfClass(typeof(FamilySymbol)).FirstOrDefault(F => F.Name == FamilyName);
 
 
@@ -126,7 +140,7 @@ namespace _3DText_From_Alignment
             {
                 if (!string.IsNullOrWhiteSpace(this.ElevationTxt.Text))
                 {
-                    var elevation = UnitUtils.ConvertToInternalUnits(double.Parse(this.ElevationTxt.Text), DisplayUnitType.DUT_METERS);
+                    var elevation = UnitUtils.ConvertToInternalUnits(double.Parse(this.ElevationTxt.Text), DisplayUnitType.DUT_MILLIMETERS);
                     FamIns.LookupParameter("Elevation").Set(elevation);
                 }
 
@@ -144,7 +158,7 @@ namespace _3DText_From_Alignment
             }
             try
             {
-                var HorizontalDistance = UnitUtils.ConvertToInternalUnits(double.Parse(this.HorizontalDistancetext.Text), DisplayUnitType.DUT_METERS);
+                var HorizontalDistance = UnitUtils.ConvertToInternalUnits(double.Parse(this.HorizontalDistancetext.Text), DisplayUnitType.DUT_MILLIMETERS);
                 FamIns.LookupParameter("Horizontal Distance").Set(HorizontalDistance);
             }
             catch (Exception)

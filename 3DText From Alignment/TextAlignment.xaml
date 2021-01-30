@@ -5,16 +5,16 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_3DText_From_Alignment"
         mc:Ignorable="d"
-        Title="TextAlignment" Height="234.315" Width="301.088">
+        Title="TextAlignment" Height="263.315" Width="334.088">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="73*"/>
             <ColumnDefinition Width="221*"/>
         </Grid.ColumnDefinitions>
-        <TextBox Height="24" Margin="151.5,0,5,100" TextWrapping="Wrap" Text="" VerticalAlignment="Bottom" Name="StatoinDistanceTxt" Grid.Column="1"/>
-        <TextBox Height="24" Margin="151.5,0,5,72" TextWrapping="Wrap" Text="0.5" VerticalAlignment="Bottom" Name="HorizontalDistancetext" Grid.Column="1"/>
-        <Label Content="Distance Between Spaces" Margin="12,0,131,98" Height="26" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
-        <Label Content="Horitzonal Distance" Margin="12,0,126,70" Height="26" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
+        <TextBox Height="24" Margin="151,0,5,132" TextWrapping="Wrap" Text="" VerticalAlignment="Bottom" Name="StatoinDistanceTxt" Grid.Column="1"/>
+        <TextBox Height="24" Margin="151,0,5,104" TextWrapping="Wrap" Text="0.5" VerticalAlignment="Bottom" Name="HorizontalDistancetext" Grid.Column="1"/>
+        <Label Content="Distance Between Spaces : m" Margin="12,0,81,130" Height="26" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
+        <Label Content="Horitzonal Distance : mm" Margin="12,0,126,102" Height="26" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
         <Button Content="Run" Margin="0,0,5,10" Click="Button_Click" Height="21" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="114" RenderTransformOrigin="0.513,0.8" Grid.Column="1">
             <Button.RenderTransform>
                 <TransformGroup>
@@ -25,13 +25,15 @@
                 </TransformGroup>
             </Button.RenderTransform>
         </Button>
-        <Label Content="Starting Station" Margin="12,0,131,126" Height="26" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
-        <TextBox Height="24" Margin="151.5,0,5,128" TextWrapping="Wrap" Text="" VerticalAlignment="Bottom" x:Name="StartingStationTxt" Grid.Column="1"/>
-        <Label Content="Elevation From Line" Margin="12,0,153,44" Height="26" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
-        <TextBox Height="24" Margin="151.5,0,5,43" TextWrapping="Wrap" Text="0" VerticalAlignment="Bottom" x:Name="ElevationTxt" Grid.Column="1"/>
-        <TextBox Margin="12,0,48,157" TextWrapping="Wrap" Text="" x:Name="FamilyPath" Height="18" VerticalAlignment="Bottom" Grid.ColumnSpan="2" />
-        <Button Content="..." Margin="0,0,5,157" Click="Button_Click_1" HorizontalAlignment="Right" Width="38" Height="18" VerticalAlignment="Bottom" Grid.Column="1"/>
-        <Label Content="Select Family Path" HorizontalAlignment="Left" Margin="12,0,0,171" Width="118" Grid.ColumnSpan="2" Height="27" VerticalAlignment="Bottom"/>
+        <Label Content="Starting Station : m" Margin="12,0,131,158" Height="26" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
+        <TextBox Height="24" Margin="151,0,5,160" TextWrapping="Wrap" Text="" VerticalAlignment="Bottom" x:Name="StartingStationTxt" Grid.Column="1"/>
+        <Label Content="Elevation From Line : mm" Margin="12,0,146,76" Height="26" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
+        <TextBox Height="24" Margin="151,0,5,75" TextWrapping="Wrap" Text="0" VerticalAlignment="Bottom" x:Name="ElevationTxt" Grid.Column="1"/>
+        <TextBox Margin="12,0,48,189" TextWrapping="Wrap" Text="" x:Name="FamilyPath" Height="18" VerticalAlignment="Bottom" Grid.ColumnSpan="2" />
+        <Button Content="..." Margin="0,0,5,189" Click="Button_Click_1" HorizontalAlignment="Right" Width="38" Height="18" VerticalAlignment="Bottom" Grid.Column="1"/>
+        <Label Content="Select Family Path" HorizontalAlignment="Left" Margin="12,0,0,203" Width="118" Grid.ColumnSpan="2" Height="27" VerticalAlignment="Bottom"/>
+        <Label Content="Angel From X: Degrees" Margin="12,0,146,50" Height="26" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
+        <TextBox Height="24" Margin="151,0,5,52" TextWrapping="Wrap" Text="" VerticalAlignment="Bottom" x:Name="DegreesTxt" Grid.Column="1"/>
 
     </Grid>
 </Window>
