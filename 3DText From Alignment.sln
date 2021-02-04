@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.30523.141
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DText From Alignment", "3DText From Alignment\3DText From Alignment.csproj", "{A5983BEF-7B0C-40F5-AA96-18D37A38A839}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DAlignmentInstaller", "3DAlignmentInstaller\3DAlignmentInstaller.csproj", "{5A69ECE8-9DE2-465B-97FA-1CAE61ED6A6B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{A5983BEF-7B0C-40F5-AA96-18D37A38A839}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A5983BEF-7B0C-40F5-AA96-18D37A38A839}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A5983BEF-7B0C-40F5-AA96-18D37A38A839}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A69ECE8-9DE2-465B-97FA-1CAE61ED6A6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A69ECE8-9DE2-465B-97FA-1CAE61ED6A6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A69ECE8-9DE2-465B-97FA-1CAE61ED6A6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A69ECE8-9DE2-465B-97FA-1CAE61ED6A6B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
