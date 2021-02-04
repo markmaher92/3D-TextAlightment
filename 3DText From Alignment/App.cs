@@ -70,8 +70,8 @@ namespace _3DText_From_Alignment
             var Locationath = Assembly.GetExecutingAssembly().Location;
             PushButtonData Create3d = new PushButtonData("Create", "Create 3D Text alignment", Locationath, "_3DText_From_Alignment.Command");
             Create3d.ToolTip = "This Command creates 3D text alignments when u select a Model line"; // Can be changed to a more descriptive text.
-            Create3d.Image = new BitmapImage(new Uri(Path.GetDirectoryName(Locationath) + "\\Export.png"));
-            Create3d.LargeImage = new BitmapImage(new Uri(Path.GetDirectoryName(Locationath) + "\\Export.png"));
+            Create3d.Image = new BitmapImage(new Uri(Path.GetDirectoryName(Locationath) + "\\3DAlignment.png"));
+            Create3d.LargeImage = new BitmapImage(new Uri(Path.GetDirectoryName(Locationath) + "\\3DAlignment.png"));
 
             a.GetRibbonPanels("AFRY").Find(E => E.Name == "3D Text Alignment").AddItem(Create3d);
             return Result.Succeeded;
