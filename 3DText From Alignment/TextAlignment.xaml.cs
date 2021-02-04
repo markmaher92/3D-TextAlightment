@@ -16,6 +16,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Line = Autodesk.Revit.DB.Line;
 
 namespace _3DText_From_Alignment
 {
@@ -108,20 +109,30 @@ namespace _3DText_From_Alignment
                 try
                 {
 
-                   Double RotationAngle =  UnitUtils.ConvertToInternalUnits(double.Parse(DegreesTxt.Text),DisplayUnitType.DUT_DEGREES_AND_MINUTES);
+                    Double RotationAngle = UnitUtils.ConvertToInternalUnits(double.Parse(DegreesTxt.Text), DisplayUnitType.DUT_DEGREES_AND_MINUTES);
                     Angle = Angle + RotationAngle;
                 }
                 catch (Exception)
                 {
 
-                    throw;
                 }
 
 
                 FamilySymbol Fam = (FamilySymbol)new FilteredElementCollector(uiDoc.Document).OfClass(typeof(FamilySymbol)).FirstOrDefault(F => F.Name == FamilyName);
 
+                Fam.Activate();
+                FamilyInstance FamIns = uiDoc.Document.Create.NewFamilyInstance(Point, Fam, Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
 
-                FillParameters(i, Point, Fam, Angle, StationStart + i);
+                FillParameters(FamIns, StationStart + i);
+
+                //rotaiton in xy
+                XYZ EndPoint = new XYZ(Point.X, Point.Y, (Point.Z + 100));
+                Line L = Autodesk.Revit.DB.Line.CreateBound(Point, EndPoint);
+                ElementTransformUtils.RotateElement(FamIns.Document, FamIns.Id,L, Angle);
+
+                //rotaiton in xz
+                
+
             }
             else
             {
@@ -132,10 +143,9 @@ namespace _3DText_From_Alignment
             return StationStart;
         }
 
-        private void FillParameters(double i, XYZ Point, FamilySymbol Fam, double angle, double stationStart)
+        private void FillParameters(FamilyInstance FamIns, double stationStart)
         {
-            Fam.Activate();
-            FamilyInstance FamIns = uiDoc.Document.Create.NewFamilyInstance(Point, Fam, Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
+
             try
             {
                 if (!string.IsNullOrWhiteSpace(this.ElevationTxt.Text))
@@ -164,8 +174,25 @@ namespace _3DText_From_Alignment
             catch (Exception)
             {
             }
+            try
+            {
+                var HorizontalDistance = UnitUtils.ConvertToInternalUnits(double.Parse(this.TextHeightTxt.Text), DisplayUnitType.DUT_MILLIMETERS);
+                FamIns.LookupParameter("TextDepth").Set(HorizontalDistance);
+            }
+            catch (Exception)
+            {
+            }
+            try
+            {
+                Double Inclinnation = UnitUtils.ConvertToInternalUnits(double.Parse(InclinationTxt.Text), DisplayUnitType.DUT_DEGREES_AND_MINUTES);
+                FamIns.LookupParameter("InclinationAngle").Set(Inclinnation);
 
-            ElementTransformUtils.RotateElement(FamIns.Document, FamIns.Id, Autodesk.Revit.DB.Line.CreateBound(Point, new XYZ(Point.X, Point.Y, (Point.Z + 100))), angle);
+
+            }
+            catch (Exception)
+            {
+
+            }
         }
 
         private void Button_Click_1(object sender, RoutedEventArgs e)

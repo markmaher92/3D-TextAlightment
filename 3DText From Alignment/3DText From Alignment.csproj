@@ -41,6 +41,9 @@
     <StartProgram>$(ProgramW6432)\Autodesk\Revit 2021\Revit.exe</StartProgram>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AdWindows">
+      <HintPath>..\..\..\..\..\..\Program Files\Autodesk\Revit 2020\AdWindows.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="RevitAPI">
