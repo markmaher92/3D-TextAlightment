@@ -19,7 +19,7 @@ namespace _3DText_From_Alignment
         {
             UIApplication uiapp = commandData.Application;
             UIDocument uidoc = uiapp.ActiveUIDocument;
-            Application app = uiapp.Application;
+            Autodesk.Revit.ApplicationServices.Application app = uiapp.Application;
             Document doc = uidoc.Document;
 
             TextAlignment T = new TextAlignment(uidoc);

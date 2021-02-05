@@ -16,7 +16,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Line = Autodesk.Revit.DB.Line;
+using System.Xml;
+using System.Xml.Serialization;
+using LineX = Autodesk.Revit.DB.Line;
 
 namespace _3DText_From_Alignment
 {
@@ -36,6 +38,75 @@ namespace _3DText_From_Alignment
         {
             this.Close();
 
+            ExtractFromLandXML();
+
+            AddTextFamilies();
+        }
+
+        private void ExtractFromLandXML()
+        {
+            List<TextObject> TextObjectFromLandXml = new List<TextObject>();
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Filter = "LandXML files (*.xml)|*.xml";
+
+            dlg.Title = "Import LandXML and " + "Create 3D Alignments";
+
+            
+            if (dlg.ShowDialog() == true)
+            {
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.Load(dlg.FileName);
+                LandXML Landx = Deserialize(dlg.FileName);
+
+                foreach (Alignments Alignments in Landx.Items.OfType<Alignments>())
+                {
+                    foreach (var Alignment in Alignments.Alignment)
+                    {
+                        var StationStart = Alignment.staStart;
+
+                        var StationText = StationStart;
+
+                        foreach (CoordGeom CoordGeom in Alignment.Items.OfType<CoordGeom>())
+                        {
+                            foreach (Line LineItem in CoordGeom.Items.OfType<Line>())
+                            {
+                                var Ls =  LineItem.staStart;
+
+                                var Point = LineItem.Start.Text;
+                                var PointLife = Point[0].Split(' ');
+                                double X;
+                                Double Y;
+
+                                double.TryParse(PointLife[0], out X);
+                                double.TryParse(PointLife[1], out Y);
+
+                                XYZ PointInsert = new XYZ(X, Y, 0);
+
+                                var LineLength = LineItem.length;
+
+                                TextObjectFromLandXml.Add(new TextObject(StationStart, StationText, PointInsert));
+                                StationText += LineLength;
+                            }
+                        }
+                    }
+                    
+                    
+                }
+                
+            }
+        }
+        public static LandXML Deserialize(string path)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(LandXML));
+
+            StreamReader reader = new StreamReader(path);
+            LandXML Schema = (LandXML)serializer.Deserialize(reader);
+            reader.Close();
+
+            return Schema;
+        }
+        private void AddTextFamilies()
+        {
             string FamilyName = "3DAlignment_Tool";
 
             using (Transaction T = new Transaction(uiDoc.Document, "Create labes"))
@@ -127,7 +198,7 @@ namespace _3DText_From_Alignment
 
                 //rotaiton in xy
                 XYZ EndPoint = new XYZ(Point.X, Point.Y, (Point.Z + 100));
-                Line L = Autodesk.Revit.DB.Line.CreateBound(Point, EndPoint);
+                LineX L = Autodesk.Revit.DB.Line.CreateBound(Point, EndPoint);
                 ElementTransformUtils.RotateElement(FamIns.Document, FamIns.Id,L, Angle);
 
                 //rotaiton in xz
