@@ -38,12 +38,12 @@ namespace _3DText_From_Alignment
         {
             this.Close();
 
-            ExtractFromLandXML();
+            List<TextObject> Obects = ExtractFromLandXML();
 
-            AddTextFamilies();
+            AddTextFamilies(Obects);
         }
 
-        private void ExtractFromLandXML()
+        private List<TextObject> ExtractFromLandXML()
         {
             List<TextObject> TextObjectFromLandXml = new List<TextObject>();
             OpenFileDialog dlg = new OpenFileDialog();
@@ -52,6 +52,7 @@ namespace _3DText_From_Alignment
             dlg.Title = "Import LandXML and " + "Create 3D Alignments";
 
             
+
             if (dlg.ShowDialog() == true)
             {
                 XmlDocument xmlDoc = new XmlDocument();
@@ -70,30 +71,49 @@ namespace _3DText_From_Alignment
                         {
                             foreach (Line LineItem in CoordGeom.Items.OfType<Line>())
                             {
-                                var Ls =  LineItem.staStart;
+                                var Ls = LineItem.staStart;
 
                                 var Point = LineItem.Start.Text;
                                 var PointLife = Point[0].Split(' ');
-                                double X;
+                                Double X;
                                 Double Y;
+
 
                                 double.TryParse(PointLife[0], out X);
                                 double.TryParse(PointLife[1], out Y);
 
-                                XYZ PointInsert = new XYZ(X, Y, 0);
+                                var Xcon = UnitUtils.ConvertToInternalUnits(X,DisplayUnitType.DUT_METERS);
+                                var Ycon = UnitUtils.ConvertToInternalUnits(Y, DisplayUnitType.DUT_METERS);
+                                XYZ PointStart = new XYZ(Xcon, Ycon, 0);
 
+
+                                var PointendX = LineItem.End.Text;
+                                var PointEndARr = PointendX[0].Split(' ');
+                                Double XEnd;
+                                Double YEnd;
+
+                                double.TryParse(PointEndARr[0], out XEnd);
+                                double.TryParse(PointEndARr[1], out YEnd);
+
+                                var XconEnd = UnitUtils.ConvertToInternalUnits(XEnd, DisplayUnitType.DUT_METERS);
+                                var YconEnd = UnitUtils.ConvertToInternalUnits(YEnd, DisplayUnitType.DUT_METERS);
+                                XYZ PointEnd = new XYZ(XconEnd, YconEnd, 0);
+                            
                                 var LineLength = LineItem.length;
 
-                                TextObjectFromLandXml.Add(new TextObject(StationStart, StationText, PointInsert));
+                                TextObjectFromLandXml.Add(new TextObject(StationStart, StationText, PointStart, PointEnd, LineLength));
+
                                 StationText += LineLength;
                             }
                         }
                     }
-                    
-                    
+
+
                 }
-                
+
             }
+
+            return TextObjectFromLandXml;
         }
         public static LandXML Deserialize(string path)
         {
@@ -105,7 +125,7 @@ namespace _3DText_From_Alignment
 
             return Schema;
         }
-        private void AddTextFamilies()
+        private void AddTextFamilies(List<TextObject> obects)
         {
             string FamilyName = "3DAlignment_Tool";
 
@@ -113,11 +133,11 @@ namespace _3DText_From_Alignment
             {
                 T.Start();
 
+               
                 try
                 {
                     uiDoc.Document.LoadFamily(FamilyPath.Text);
                     FamilyName = System.IO.Path.GetFileNameWithoutExtension(FamilyPath.Text);
-
                 }
                 catch (Exception)
                 {
@@ -125,10 +145,7 @@ namespace _3DText_From_Alignment
                 }
                 try
                 {
-                    IList<Reference> Lines = uiDoc.Selection.PickObjects(ObjectType.Element, "Select Line");
-
-                    var StationStart = double.Parse(this.StartingStationTxt.Text);
-                    StationStart = AcheStationingAndFamilyInsert(Lines, StationStart, FamilyName);
+                    AcheStationingAndFamilyInsert(obects, FamilyName);
 
                 }
                 catch (Exception)
@@ -140,81 +157,76 @@ namespace _3DText_From_Alignment
             }
         }
 
-        private double AcheStationingAndFamilyInsert(IList<Reference> Lines, double StationStart, string FamilyName)
+        private void AcheStationingAndFamilyInsert(List<TextObject> Objects, string FamilyName)
         {
-            foreach (var item in Lines)
+            
+            foreach (TextObject Object in Objects)
             {
-                var Element = uiDoc.Document.GetElement(item);
-                if (Element is ModelLine)
-                {
-                    var Length = (Element as ModelLine).GeometryCurve.Length;
-
-                    var MetricLength = UnitUtils.ConvertFromInternalUnits(Length, DisplayUnitType.DUT_METERS);
-
-                    var StationDsitance = double.Parse(this.StatoinDistanceTxt.Text);
-
-
-                    for (double i = 0; i < (MetricLength + StationDsitance); i += StationDsitance)
-                    {
-                        StationStart = InsertFamilyAtStation(StationStart, Element, MetricLength, i, FamilyName);
-
-                    }
-                }
-            }
-
-            return StationStart;
-        }
-
-        private double InsertFamilyAtStation(double StationStart, Element Element, double MetricLength, double i, string FamilyName)
-        {
-            if (i < MetricLength)
-            {
-                var NewI = UnitUtils.ConvertToInternalUnits(i, DisplayUnitType.DUT_METERS);
-
-                var Point = (Element as ModelLine).GeometryCurve.Evaluate(NewI, false);
-                var Point2 = (Element as ModelLine).GeometryCurve.GetEndPoint(1);
-
-                XYZ NormalVector = (Point2 - Point).Normalize();
-                double Angle = (Math.PI / 2) - NormalVector.AngleTo(XYZ.BasisX);
-
+               
                 try
                 {
+                    var geomLine = Autodesk.Revit.DB.Line.CreateBound(Object.PointInsert, Object.PointEnd);
+                    Autodesk.Revit.DB.Line LineX = Autodesk.Revit.DB.Line.CreateBound(Object.PointInsert, Object.PointEnd);
+                    var line = uiDoc.Document.Create.NewDetailCurve(uiDoc.ActiveView ,geomLine);
 
-                    Double RotationAngle = UnitUtils.ConvertToInternalUnits(double.Parse(DegreesTxt.Text), DisplayUnitType.DUT_DEGREES_AND_MINUTES);
-                    Angle = Angle + RotationAngle;
+
+                    //XYZ origin = Object.PointInsert;
+                    //XYZ normal = new XYZ(Object.PointInsert.X, Object.PointInsert.Y, 1);
+                    //Plane geomPlane = Plane.CreateByThreePoints(XYZ.BasisX, XYZ.BasisY);
+                    //Plane geomPlane = Plane.CreateByNormalAndOrigin(normal, origin);
+
+                    //XYZ origin = new XYZ(0, 0, 0);
+                    //XYZ normal = new XYZ(1, 1, 0);
+                    //Plane geomPlane = Plane.CreateByNormalAndOrigin(normal, origin);
+                    //SketchPlane sketch = SketchPlane.Create(uiDoc.Document, geomPlane);
+                    //ModelLine line1 = uiDoc.Document.Create.NewModelCurve(geomLine, sketch) as ModelLine;
+
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
 
                 }
+              
 
+                InsertFamilyAtStation(Object, FamilyName);
 
-                FamilySymbol Fam = (FamilySymbol)new FilteredElementCollector(uiDoc.Document).OfClass(typeof(FamilySymbol)).FirstOrDefault(F => F.Name == FamilyName);
-
-                Fam.Activate();
-                FamilyInstance FamIns = uiDoc.Document.Create.NewFamilyInstance(Point, Fam, Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
-
-                FillParameters(FamIns, StationStart + i);
-
-                //rotaiton in xy
-                XYZ EndPoint = new XYZ(Point.X, Point.Y, (Point.Z + 100));
-                LineX L = Autodesk.Revit.DB.Line.CreateBound(Point, EndPoint);
-                ElementTransformUtils.RotateElement(FamIns.Document, FamIns.Id,L, Angle);
-
-                //rotaiton in xz
-                
-
-            }
-            else
-            {
-                StationStart = Math.Round(StationStart + MetricLength, 3);
-
+               
             }
 
-            return StationStart;
         }
 
-        private void FillParameters(FamilyInstance FamIns, double stationStart)
+        private void InsertFamilyAtStation(TextObject Object, string FamilyName)
+        {
+            XYZ NormalVector = (Object.PointEnd - Object.PointInsert).Normalize();
+            //double Angle = (Math.PI / 2) - NormalVector.AngleTo(XYZ.BasisX);
+            double Angle = NormalVector.AngleTo(XYZ.BasisX) + (Math.PI/2) + Math.PI;
+
+            try
+            {
+
+                Double RotationAngle = UnitUtils.ConvertToInternalUnits(double.Parse(DegreesTxt.Text), DisplayUnitType.DUT_DEGREES_AND_MINUTES);
+                Angle = Angle + RotationAngle;
+            }
+            catch (Exception)
+            {
+
+            }
+
+
+            FamilySymbol Fam = (FamilySymbol)new FilteredElementCollector(uiDoc.Document).OfClass(typeof(FamilySymbol)).FirstOrDefault(F => F.Name == FamilyName);
+
+            Fam.Activate();
+            FamilyInstance FamIns = uiDoc.Document.Create.NewFamilyInstance(Object.PointInsert, Fam, Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
+
+            FillParameters(FamIns, Object.StationText);
+
+            XYZ EndPoint = new XYZ(Object.PointInsert.X, Object.PointInsert.Y, (Object.PointInsert.Z + 100));
+            LineX L = Autodesk.Revit.DB.Line.CreateBound(Object.PointInsert, EndPoint);
+            ElementTransformUtils.RotateElement(FamIns.Document, FamIns.Id, L, Angle);
+
+        }
+
+        private void FillParameters(FamilyInstance FamIns, double Stationtext)
         {
 
             try
@@ -231,8 +243,9 @@ namespace _3DText_From_Alignment
             }
             try
             {
+                var RoundedX = Math.Round(Stationtext, 3);
                 //var Station = double.Parse(this.StartingStationTxt.Text) + i;
-                FamIns.LookupParameter("Text").Set(stationStart.ToString());
+                FamIns.LookupParameter("Text").Set(RoundedX.ToString());
             }
             catch (Exception)
             {
