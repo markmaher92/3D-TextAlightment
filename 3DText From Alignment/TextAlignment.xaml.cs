@@ -138,11 +138,7 @@ namespace _3DText_From_Alignment
 
                         List<double> DoubleX = new List<double>();
                         DoubleX.AddRange(Enumerable.Repeat(1.0, HeighPoints.Count));
-                        //List<LineX> Lines = new List<LineX>();
-                        //for (int i = 0; i < HeighPoints.Count - 1; i++)
-                        //{
-                        //    Lines.Add(LineX.CreateBound(HeighPoints[i], HeighPoints[i + 1]));
-                        //}
+                       
                         HermiteSpline HermitCurve = HermiteSpline.Create(HeighPoints, false);
 
                         for (int i = 0; i < TextObjectFromLandXml.Count; i++)
@@ -220,11 +216,6 @@ namespace _3DText_From_Alignment
                     var geomLine = Autodesk.Revit.DB.Line.CreateBound(Object.PointInsert, Object.PointEnd);
                     Autodesk.Revit.DB.Line LineX = Autodesk.Revit.DB.Line.CreateBound(Object.PointInsert, Object.PointEnd);
                     var line = uiDoc.Document.Create.NewDetailCurve(uiDoc.ActiveView, geomLine);
-
-                    //XYZ XZ = new XYZ((Object.PointInsert.X + Object.PointEnd.X / 2), (Object.PointInsert.Y + Object.PointEnd.Y / 2), (Object.PointInsert.Z + Object.PointEnd.Z / 2));
-                    //Plane P = Plane.CreateByThreePoints(Object.PointInsert, Object.PointEnd,XZ);
-                    //var Sketsh = SketchPlane.Create(uiDoc.Document, P);
-                    //var ModelLine = uiDoc.Document.Create.NewModelCurve(LineX, Sketsh);
                 }
                 catch (Exception e)
                 {
