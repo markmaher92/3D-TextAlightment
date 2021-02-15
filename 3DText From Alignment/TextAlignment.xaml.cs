@@ -38,20 +38,20 @@ namespace _3DText_From_Alignment
         {
             this.Close();
 
-            List<TextObject> Obects = ExtractFromLandXML();
+            var Obects = ExtractFromLandXML();
 
             AddTextFamilies(Obects);
         }
 
-        private List<TextObject> ExtractFromLandXML()
+
+        private (List<TextObject>, HermiteSpline) ExtractFromLandXML()
         {
             List<TextObject> TextObjectFromLandXml = new List<TextObject>();
             OpenFileDialog dlg = new OpenFileDialog();
             dlg.Filter = "LandXML files (*.xml)|*.xml";
 
             dlg.Title = "Import LandXML and " + "Create 3D Alignments";
-
-
+            HermiteSpline HermitCurve = null;
 
             if (dlg.ShowDialog() == true)
             {
@@ -71,98 +71,96 @@ namespace _3DText_From_Alignment
                         {
                             foreach (Line LineItem in CoordGeom.Items.OfType<Line>())
                             {
-                                var Ls = LineItem.staStart;
-
-                                var Point = LineItem.Start.Text;
-                                var PointLife = Point[0].Split(' ');
-                                Double X;
-                                Double Y;
-
-
-                                double.TryParse(PointLife[0], out X);
-                                double.TryParse(PointLife[1], out Y);
-
-                                var Xcon = UnitUtils.ConvertToInternalUnits(X, DisplayUnitType.DUT_METERS);
-                                var Ycon = UnitUtils.ConvertToInternalUnits(Y, DisplayUnitType.DUT_METERS);
-                                //XYZ PointStart = new XYZ(Xcon, Ycon, 0);
-                                XYZ PointStart = new XYZ(Ycon, Xcon, 0);
-
-
-                                var PointendX = LineItem.End.Text;
-                                var PointEndARr = PointendX[0].Split(' ');
-                                Double XEnd;
-                                Double YEnd;
-
-                                double.TryParse(PointEndARr[0], out XEnd);
-                                double.TryParse(PointEndARr[1], out YEnd);
-
-                                var XconEnd = UnitUtils.ConvertToInternalUnits(XEnd, DisplayUnitType.DUT_METERS);
-                                var YconEnd = UnitUtils.ConvertToInternalUnits(YEnd, DisplayUnitType.DUT_METERS);
-                                //XYZ PointEnd = new XYZ(XconEnd, YconEnd, 0);
-                                XYZ PointEnd = new XYZ(YconEnd, XconEnd, 0);
-
-                                var LineLength = LineItem.length;
-
-                                double StationEnd = StationStart + LineLength;
-                                TextObjectFromLandXml.Add(new TextObject(StationStart, StationEnd, StationStart, PointStart, PointEnd, LineLength));
-                                StationStart += LineLength;
-                                //StationEnd += LineLength;
-
+                                StationStart = ExtractLandXmlLine(TextObjectFromLandXml, StationStart, LineItem);
                             }
                         }
 
                         List<XYZ> HeighPoints = new List<XYZ>();
 
-                        foreach (Profile Prof in Alignment.Items.OfType<Profile>())
-                        {
-                            foreach (var Profilealign in Prof.Items.OfType<ProfAlign>())
-                            {
-                                foreach (var PVI in Profilealign.Items.OfType<PVI>())
-                                {
-                                    var Tx = PVI.Text[0].Split(' ');
-                                    Double PVIX;
-                                    Double PVIZ;
+                        ExtractHeightsFromLandXml(Alignment, HeighPoints);
 
-                                    double.TryParse(Tx[0], out PVIX);
-                                    double.TryParse(Tx[1], out PVIZ);
+                        HermitCurve = HermiteSpline.Create(HeighPoints, false);
 
-                                    //var XAcon = UnitUtils.ConvertToInternalUnits(PVIX, DisplayUnitType.DUT_METERS);
-                                    //var XAconEnd = UnitUtils.ConvertToInternalUnits(PVIZ, DisplayUnitType.DUT_METERS);
-
-                                    HeighPoints.Add(new XYZ(PVIX, 0, PVIZ));
-                                    //HeighPoints.Add(new XYZ(0, 0, PVIZ));
-                                    // HeighPoints.Add(new XYZ(XAcon, 0, XAconEnd));
-                                }
-                            }
-                        }
-
-                        List<double> DoubleX = new List<double>();
-                        DoubleX.AddRange(Enumerable.Repeat(1.0, HeighPoints.Count));
-                       
-                        HermiteSpline HermitCurve = HermiteSpline.Create(HeighPoints, false);
-
-                        for (int i = 0; i < TextObjectFromLandXml.Count; i++)
-                        {
-                            var R = HermitCurve.Project(new XYZ(TextObjectFromLandXml[i].StationText, 0, 0));
-                            var XAcon = UnitUtils.ConvertToInternalUnits(R.XYZPoint.Z, DisplayUnitType.DUT_METERS);
-                            TextObjectFromLandXml[i].PointInsert = new XYZ(TextObjectFromLandXml[i].PointInsert.X, TextObjectFromLandXml[i].PointInsert.Y, XAcon);
-
-                            var R2 = HermitCurve.Project(new XYZ(TextObjectFromLandXml[i].StationEnd, 0, 0));
-                            var XAcon2 = UnitUtils.ConvertToInternalUnits(R2.XYZPoint.Z, DisplayUnitType.DUT_METERS);
-                            TextObjectFromLandXml[i].PointEnd = new XYZ(TextObjectFromLandXml[i].PointEnd.X, TextObjectFromLandXml[i].PointEnd.Y, XAcon2);
-                        }
-                       
+                        ExtractHeightsFromProfile(TextObjectFromLandXml, HermitCurve);
 
                     }
-
-
                 }
-
-
             }
-
-            return TextObjectFromLandXml;
+            return (TextObjectFromLandXml, HermitCurve);
         }
+
+        private static double ExtractLandXmlLine(List<TextObject> TextObjectFromLandXml, double StationStart, Line LineItem)
+        {
+            var Ls = LineItem.staStart;
+
+            var Point = LineItem.Start.Text;
+            var PointLife = Point[0].Split(' ');
+            Double X;
+            Double Y;
+
+
+            double.TryParse(PointLife[0], out X);
+            double.TryParse(PointLife[1], out Y);
+
+            var Xcon = UnitUtils.ConvertToInternalUnits(X, DisplayUnitType.DUT_METERS);
+            var Ycon = UnitUtils.ConvertToInternalUnits(Y, DisplayUnitType.DUT_METERS);
+            XYZ PointStart = new XYZ(Ycon, Xcon, 0);
+
+
+            var PointendX = LineItem.End.Text;
+            var PointEndARr = PointendX[0].Split(' ');
+            Double XEnd;
+            Double YEnd;
+
+            double.TryParse(PointEndARr[0], out XEnd);
+            double.TryParse(PointEndARr[1], out YEnd);
+
+            var XconEnd = UnitUtils.ConvertToInternalUnits(XEnd, DisplayUnitType.DUT_METERS);
+            var YconEnd = UnitUtils.ConvertToInternalUnits(YEnd, DisplayUnitType.DUT_METERS);
+            XYZ PointEnd = new XYZ(YconEnd, XconEnd, 0);
+
+            var LineLength = LineItem.length;
+
+            double StationEnd = StationStart + LineLength;
+            TextObjectFromLandXml.Add(new TextObject(StationStart, StationEnd, StationStart, PointStart, PointEnd, LineLength));
+            StationStart += LineLength;
+            return StationStart;
+        }
+
+        private static void ExtractHeightsFromProfile(List<TextObject> TextObjectFromLandXml, HermiteSpline HermitCurve)
+        {
+            for (int i = 0; i < TextObjectFromLandXml.Count; i++)
+            {
+                var R = HermitCurve.Project(new XYZ(TextObjectFromLandXml[i].StationText, 0, 0));
+                var XAcon = UnitUtils.ConvertToInternalUnits(R.XYZPoint.Z, DisplayUnitType.DUT_METERS);
+                TextObjectFromLandXml[i].PointInsert = new XYZ(TextObjectFromLandXml[i].PointInsert.X, TextObjectFromLandXml[i].PointInsert.Y, XAcon);
+
+                var R2 = HermitCurve.Project(new XYZ(TextObjectFromLandXml[i].StationEnd, 0, 0));
+                var XAcon2 = UnitUtils.ConvertToInternalUnits(R2.XYZPoint.Z, DisplayUnitType.DUT_METERS);
+                TextObjectFromLandXml[i].PointEnd = new XYZ(TextObjectFromLandXml[i].PointEnd.X, TextObjectFromLandXml[i].PointEnd.Y, XAcon2);
+            }
+        }
+        private static void ExtractHeightsFromLandXml(Alignment Alignment, List<XYZ> HeighPoints)
+        {
+            foreach (Profile Prof in Alignment.Items.OfType<Profile>())
+            {
+                foreach (var Profilealign in Prof.Items.OfType<ProfAlign>())
+                {
+                    foreach (var PVI in Profilealign.Items.OfType<PVI>())
+                    {
+                        var Tx = PVI.Text[0].Split(' ');
+                        Double PVIX;
+                        Double PVIZ;
+
+                        double.TryParse(Tx[0], out PVIX);
+                        double.TryParse(Tx[1], out PVIZ);
+
+                        HeighPoints.Add(new XYZ(PVIX, 0, PVIZ));
+                    }
+                }
+            }
+        }
+
         public static LandXML Deserialize(string path)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(LandXML));
@@ -173,15 +171,13 @@ namespace _3DText_From_Alignment
 
             return Schema;
         }
-        private void AddTextFamilies(List<TextObject> obects)
+        private void AddTextFamilies((List<TextObject>, HermiteSpline) obects)
         {
             string FamilyName = "3DAlignment_Tool";
 
             using (Transaction T = new Transaction(uiDoc.Document, "Create labes"))
             {
                 T.Start();
-
-
                 try
                 {
                     uiDoc.Document.LoadFamily(FamilyPath.Text);
@@ -193,6 +189,7 @@ namespace _3DText_From_Alignment
                 }
                 try
                 {
+                   
                     AcheStationingAndFamilyInsert(obects, FamilyName);
 
                 }
@@ -205,51 +202,27 @@ namespace _3DText_From_Alignment
             }
         }
 
-        private void AcheStationingAndFamilyInsert(List<TextObject> Objects, string FamilyName)
+        private void AcheStationingAndFamilyInsert((List<TextObject>, HermiteSpline) obects, string FamilyName)
         {
-
-            foreach (TextObject Object in Objects)
+            foreach (TextObject Object in obects.Item1)
             {
-
+                var geomLine = Autodesk.Revit.DB.Line.CreateBound(Object.PointInsert, Object.PointEnd);
+                Autodesk.Revit.DB.Line LineX = Autodesk.Revit.DB.Line.CreateBound(Object.PointInsert, Object.PointEnd);
                 try
                 {
-                    var geomLine = Autodesk.Revit.DB.Line.CreateBound(Object.PointInsert, Object.PointEnd);
-                    Autodesk.Revit.DB.Line LineX = Autodesk.Revit.DB.Line.CreateBound(Object.PointInsert, Object.PointEnd);
                     var line = uiDoc.Document.Create.NewDetailCurve(uiDoc.ActiveView, geomLine);
                 }
                 catch (Exception e)
                 {
-
                 }
-
-
-                InsertFamilyAtStation(Object, FamilyName);
-
-
+                InsertFamilyAtStation(Object, FamilyName, obects.Item2);
             }
-
-            InsertFamilyAtStation(Objects.Last(), FamilyName, true);
-
+            InsertFamilyAtStation(obects.Item1.Last(), FamilyName, true);
         }
 
         private void InsertFamilyAtStation(TextObject Object, string FamilyName, bool last = false)
         {
-
-            XYZ NormalVector = (Object.PointEnd - Object.PointInsert).Normalize();
-            double Angle = (Math.PI / 2) - NormalVector.AngleTo(XYZ.BasisX);
-            //double Angle = NormalVector.AngleTo(XYZ.BasisX) + (Math.PI / 2) + Math.PI;
-
-            try
-            {
-
-                Double RotationAngle = UnitUtils.ConvertToInternalUnits(double.Parse(DegreesTxt.Text), DisplayUnitType.DUT_DEGREES_AND_MINUTES);
-                Angle = Angle + RotationAngle;
-            }
-            catch (Exception)
-            {
-
-            }
-
+            double Angle = ModifyRotationAngle(Object);
 
             FamilySymbol Fam = (FamilySymbol)new FilteredElementCollector(uiDoc.Document).OfClass(typeof(FamilySymbol)).FirstOrDefault(F => F.Name == FamilyName);
             Fam.Activate();
@@ -257,25 +230,99 @@ namespace _3DText_From_Alignment
             FamilyInstance FamIns = null;
             if (last)
             {
-                FamIns = uiDoc.Document.Create.NewFamilyInstance(Object.PointEnd, Fam, Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
-                Object.StationText = Object.LineLength + Object.StationText;
-                FillParameters(FamIns, Object.StationText);
-                XYZ EndPoint = new XYZ(Object.PointEnd.X, Object.PointEnd.Y, (Object.PointEnd.Z + 100));
-                LineX L = Autodesk.Revit.DB.Line.CreateBound(Object.PointEnd, EndPoint);
-                ElementTransformUtils.RotateElement(FamIns.Document, FamIns.Id, L, Angle);
+                FamIns = InsertLastFamilyInstance(Object, Angle, Fam);
             }
             else
             {
-                FamIns = uiDoc.Document.Create.NewFamilyInstance(Object.PointInsert, Fam, Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
-                FillParameters(FamIns, Object.StationText);
-                XYZ EndPoint = new XYZ(Object.PointInsert.X, Object.PointInsert.Y, (Object.PointInsert.Z + 100));
-                LineX L = Autodesk.Revit.DB.Line.CreateBound(Object.PointInsert, EndPoint);
-                ElementTransformUtils.RotateElement(FamIns.Document, FamIns.Id, L, Angle);
+                FamIns = InsertFamilyInstance(Object, Angle, Fam);
+            }
+        }
+        private void InsertFamilyAtStation(TextObject Object, string FamilyName, HermiteSpline HermitCurve)
+        {
+            double Angle = ModifyRotationAngle(Object);
+
+            FamilySymbol Fam = (FamilySymbol)new FilteredElementCollector(uiDoc.Document).OfClass(typeof(FamilySymbol)).FirstOrDefault(F => F.Name == FamilyName);
+            Fam.Activate();
+
+            FamilyInstance FamIns = null;
+
+            LineX L = LineX.CreateBound(Object.PointInsert, Object.PointEnd);
+
+            FamIns = InsertFamilyInstance(Object, Angle, Fam);
+
+            if (string.IsNullOrEmpty(this.StationDistanceTxt.Text))
+            {
+                this.StationDistanceTxt.Text = 0.ToString();
+            }
+            var StationIncrement = double.Parse(this.StationDistanceTxt.Text);
+            var StationIncementConv = UnitUtils.ConvertToInternalUnits(double.Parse(this.StationDistanceTxt.Text), DisplayUnitType.DUT_METERS);
+
+            int J = 1;
+            for (double i = StationIncementConv; i < L.Length; i += StationIncementConv)
+            {
+                //error
+                TextObject MidPointTE = CreateMidPoint(Object, HermitCurve, L, StationIncrement, J, i);
+
+                FamIns = InsertFamilyInstance(MidPointTE, Angle, Fam);
+
+                if (StationIncementConv == 0)
+                {
+                    return;
+                }
+                J++;
             }
 
+        }
 
+        private static TextObject CreateMidPoint(TextObject Object, HermiteSpline HermitCurve, LineX L, double StationIncrement, int J, double i)
+        {
+            var MidPointTE = new TextObject(Object);
+            MidPointTE.PointInsert = L.Evaluate(i, false);
+            //MidPointTE.StationText = MidPointTE.StationText + (StationIncrement * J);
+            MidPointTE.StationText = MidPointTE.StationStart + (StationIncrement * J);
 
+            var R = HermitCurve.Project(new XYZ(MidPointTE.StationText, 0, 0));
+            var XAcon = UnitUtils.ConvertToInternalUnits(R.XYZPoint.Z, DisplayUnitType.DUT_METERS);
+            MidPointTE.PointInsert = new XYZ(MidPointTE.PointInsert.X, MidPointTE.PointInsert.Y, XAcon);
+            return MidPointTE;
+        }
 
+        private double ModifyRotationAngle(TextObject Object)
+        {
+            XYZ NormalVector = (Object.PointEnd - Object.PointInsert).Normalize();
+            double Angle = (Math.PI / 2) - NormalVector.AngleTo(XYZ.BasisX);
+            //double Angle = NormalVector.AngleTo(XYZ.BasisX) + (Math.PI / 2) + Math.PI;
+            try
+            {
+                Double RotationAngle = UnitUtils.ConvertToInternalUnits(double.Parse(DegreesTxt.Text), DisplayUnitType.DUT_DEGREES_AND_MINUTES);
+                Angle = Angle + RotationAngle;
+            }
+            catch (Exception)
+            {
+
+            }
+            return Angle;
+        }
+
+        private FamilyInstance InsertFamilyInstance(TextObject Object, double Angle, FamilySymbol Fam)
+        {
+            FamilyInstance FamIns = uiDoc.Document.Create.NewFamilyInstance(Object.PointInsert, Fam, Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
+            FillParameters(FamIns, Object.StationText);
+            XYZ EndPoint = new XYZ(Object.PointInsert.X, Object.PointInsert.Y, (Object.PointInsert.Z + 100));
+            LineX L = Autodesk.Revit.DB.Line.CreateBound(Object.PointInsert, EndPoint);
+            ElementTransformUtils.RotateElement(FamIns.Document, FamIns.Id, L, Angle);
+            return FamIns;
+        }
+
+        private FamilyInstance InsertLastFamilyInstance(TextObject Object, double Angle, FamilySymbol Fam)
+        {
+            FamilyInstance FamIns = uiDoc.Document.Create.NewFamilyInstance(Object.PointEnd, Fam, Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
+            Object.StationText = Object.LineLength + Object.StationText;
+            FillParameters(FamIns, Object.StationText);
+            XYZ EndPoint = new XYZ(Object.PointEnd.X, Object.PointEnd.Y, (Object.PointEnd.Z + 100));
+            LineX L = Autodesk.Revit.DB.Line.CreateBound(Object.PointEnd, EndPoint);
+            ElementTransformUtils.RotateElement(FamIns.Document, FamIns.Id, L, Angle);
+            return FamIns;
         }
 
         private void FillParameters(FamilyInstance FamIns, double Stationtext)
@@ -296,7 +343,6 @@ namespace _3DText_From_Alignment
             try
             {
                 var RoundedX = Math.Round(Stationtext, 3);
-                //var Station = double.Parse(this.StartingStationTxt.Text) + i;
                 FamIns.LookupParameter("Text").Set(RoundedX.ToString());
             }
             catch (Exception)

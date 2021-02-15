@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.DB;
+using System.Collections.Generic;
 
 namespace _3DText_From_Alignment
 {
@@ -20,5 +21,17 @@ namespace _3DText_From_Alignment
         public XYZ PointInsert { get; set; }
         public XYZ PointEnd { get; set; }
         public double LineLength { get; set; }
+
+        public TextObject(TextObject OBJ)
+        {
+            StationStart = OBJ.StationStart;
+            StationEnd = OBJ.StationEnd;
+            StationText = OBJ.StationText;
+            PointInsert = OBJ.PointInsert;
+            PointEnd = OBJ.PointEnd;
+            LineLength = OBJ.LineLength;
+        }
+
+
     }
 }
