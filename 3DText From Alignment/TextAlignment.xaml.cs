@@ -102,9 +102,10 @@ namespace _3DText_From_Alignment
             double.TryParse(PointLife[0], out X);
             double.TryParse(PointLife[1], out Y);
 
-            var Xcon = UnitUtils.ConvertToInternalUnits(X, DisplayUnitType.DUT_METERS);
-            var Ycon = UnitUtils.ConvertToInternalUnits(Y, DisplayUnitType.DUT_METERS);
-            XYZ PointStart = new XYZ(Ycon, Xcon, 0);
+            //var Xcon = UnitUtils.ConvertToInternalUnits(X, DisplayUnitType.DUT_METERS);
+            //var Ycon = UnitUtils.ConvertToInternalUnits(Y, DisplayUnitType.DUT_METERS);
+            //XYZ PointStart = new XYZ(Ycon, Xcon, 0);
+            XYZ PointStart = new XYZ(Y, X, 0);
 
 
             var PointendX = LineItem.End.Text;
@@ -115,9 +116,10 @@ namespace _3DText_From_Alignment
             double.TryParse(PointEndARr[0], out XEnd);
             double.TryParse(PointEndARr[1], out YEnd);
 
-            var XconEnd = UnitUtils.ConvertToInternalUnits(XEnd, DisplayUnitType.DUT_METERS);
-            var YconEnd = UnitUtils.ConvertToInternalUnits(YEnd, DisplayUnitType.DUT_METERS);
-            XYZ PointEnd = new XYZ(YconEnd, XconEnd, 0);
+            //var XconEnd = UnitUtils.ConvertToInternalUnits(XEnd, DisplayUnitType.DUT_METERS);
+            //var YconEnd = UnitUtils.ConvertToInternalUnits(YEnd, DisplayUnitType.DUT_METERS);
+            //XYZ PointEnd = new XYZ(YconEnd, XconEnd, 0);
+            XYZ PointEnd = new XYZ(YEnd, XEnd, 0);
 
             var LineLength = LineItem.length;
 
@@ -132,12 +134,26 @@ namespace _3DText_From_Alignment
             for (int i = 0; i < TextObjectFromLandXml.Count; i++)
             {
                 var R = HermitCurve.Project(new XYZ(TextObjectFromLandXml[i].StationText, 0, 0));
-                var XAcon = UnitUtils.ConvertToInternalUnits(R.XYZPoint.Z, DisplayUnitType.DUT_METERS);
-                TextObjectFromLandXml[i].PointInsert = new XYZ(TextObjectFromLandXml[i].PointInsert.X, TextObjectFromLandXml[i].PointInsert.Y, XAcon);
+                LineX L = LineX.CreateUnbound(new XYZ(TextObjectFromLandXml[i].StationText, 0, 0), new XYZ(TextObjectFromLandXml[i].StationText, 0, 1));
+
+                IntersectionResultArray Result = null;
+                HermitCurve.Intersect(L, out Result);
+                //var XAcon = UnitUtils.ConvertToInternalUnits(R.XYZPoint.Z, DisplayUnitType.DUT_METERS);
+                //TextObjectFromLandXml[i].PointInsert = new XYZ(TextObjectFromLandXml[i].PointInsert.X, TextObjectFromLandXml[i].PointInsert.Y, XAcon);
+                TextObjectFromLandXml[i].PointInsert = new XYZ(TextObjectFromLandXml[i].PointInsert.X, TextObjectFromLandXml[i].PointInsert.Y, R.XYZPoint.Z);
 
                 var R2 = HermitCurve.Project(new XYZ(TextObjectFromLandXml[i].StationEnd, 0, 0));
-                var XAcon2 = UnitUtils.ConvertToInternalUnits(R2.XYZPoint.Z, DisplayUnitType.DUT_METERS);
-                TextObjectFromLandXml[i].PointEnd = new XYZ(TextObjectFromLandXml[i].PointEnd.X, TextObjectFromLandXml[i].PointEnd.Y, XAcon2);
+
+                var Parameter = TextObjectFromLandXml[i].StationEnd / HermitCurve.Length;
+                var Test = HermitCurve.Evaluate(Parameter,true);
+
+                LineX L2 = LineX.CreateUnbound(new XYZ(TextObjectFromLandXml[i].StationEnd, 0, 0), new XYZ(TextObjectFromLandXml[i].StationEnd, 0, 100));
+
+                IntersectionResultArray Result2 = null;
+                HermitCurve.Intersect(L2, out Result2);
+                //var XAcon2 = UnitUtils.ConvertToInternalUnits(R2.XYZPoint.Z, DisplayUnitType.DUT_METERS);
+                //TextObjectFromLandXml[i].PointEnd = new XYZ(TextObjectFromLandXml[i].PointEnd.X, TextObjectFromLandXml[i].PointEnd.Y, XAcon2);
+                TextObjectFromLandXml[i].PointEnd = new XYZ(TextObjectFromLandXml[i].PointEnd.X, TextObjectFromLandXml[i].PointEnd.Y, R2.XYZPoint.Z);
             }
         }
         private static void ExtractHeightsFromLandXml(Alignment Alignment, List<XYZ> HeighPoints)
@@ -206,15 +222,15 @@ namespace _3DText_From_Alignment
         {
             foreach (TextObject Object in obects.Item1)
             {
-                var geomLine = Autodesk.Revit.DB.Line.CreateBound(Object.PointInsert, Object.PointEnd);
-                Autodesk.Revit.DB.Line LineX = Autodesk.Revit.DB.Line.CreateBound(Object.PointInsert, Object.PointEnd);
-                try
-                {
-                    var line = uiDoc.Document.Create.NewDetailCurve(uiDoc.ActiveView, geomLine);
-                }
-                catch (Exception e)
-                {
-                }
+                //var geomLine = Autodesk.Revit.DB.Line.CreateBound(Object.PointInsert, Object.PointEnd);
+                //Autodesk.Revit.DB.Line LineX = Autodesk.Revit.DB.Line.CreateBound(Object.PointInsert, Object.PointEnd);
+                //try
+                //{
+                //    var line = uiDoc.Document.Create.NewDetailCurve(uiDoc.ActiveView, geomLine);
+                //}
+                //catch (Exception e)
+                //{
+                //}
                 InsertFamilyAtStation(Object, FamilyName, obects.Item2);
             }
             InsertFamilyAtStation(obects.Item1.Last(), FamilyName, true);
@@ -246,9 +262,10 @@ namespace _3DText_From_Alignment
 
             FamilyInstance FamIns = null;
 
-            LineX L = LineX.CreateBound(Object.PointInsert, Object.PointEnd);
 
-            FamIns = InsertFamilyInstance(Object, Angle, Fam);
+            //sHOULD cONVERT
+            
+            FamIns = InsertFamilyInstance(Object.ConvertToInternal(), Angle, Fam);
 
             if (string.IsNullOrEmpty(this.StationDistanceTxt.Text))
             {
@@ -257,6 +274,8 @@ namespace _3DText_From_Alignment
             var StationIncrement = double.Parse(this.StationDistanceTxt.Text);
             var StationIncementConv = UnitUtils.ConvertToInternalUnits(double.Parse(this.StationDistanceTxt.Text), DisplayUnitType.DUT_METERS);
 
+
+            LineX L = LineX.CreateBound(Object.PointInsert, Object.PointEnd);
             int J = 1;
             for (double i = StationIncementConv; i < L.Length; i += StationIncementConv)
             {
