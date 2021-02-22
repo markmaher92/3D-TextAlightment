@@ -44,14 +44,15 @@ namespace _3DText_From_Alignment
         }
 
 
-        private (List<TextObject>, HermiteSpline) ExtractFromLandXML()
+        private (List<TextObject>, List<XYZ>) ExtractFromLandXML()
         {
             List<TextObject> TextObjectFromLandXml = new List<TextObject>();
+            List<XYZ> HeighPoints = new List<XYZ>();
+
             OpenFileDialog dlg = new OpenFileDialog();
             dlg.Filter = "LandXML files (*.xml)|*.xml";
 
             dlg.Title = "Import LandXML and " + "Create 3D Alignments";
-            HermiteSpline HermitCurve = null;
 
             if (dlg.ShowDialog() == true)
             {
@@ -75,18 +76,14 @@ namespace _3DText_From_Alignment
                             }
                         }
 
-                        List<XYZ> HeighPoints = new List<XYZ>();
-
                         ExtractHeightsFromLandXml(Alignment, HeighPoints);
 
-                        HermitCurve = HermiteSpline.Create(HeighPoints, false);
-
-                        ExtractHeightsFromProfile(TextObjectFromLandXml, HermitCurve);
+                        ExtractHeightsFromProfile(TextObjectFromLandXml, HeighPoints);
 
                     }
                 }
             }
-            return (TextObjectFromLandXml, HermitCurve);
+            return (TextObjectFromLandXml, HeighPoints);
         }
 
         private static double ExtractLandXmlLine(List<TextObject> TextObjectFromLandXml, double StationStart, Line LineItem)
@@ -102,9 +99,6 @@ namespace _3DText_From_Alignment
             double.TryParse(PointLife[0], out X);
             double.TryParse(PointLife[1], out Y);
 
-            //var Xcon = UnitUtils.ConvertToInternalUnits(X, DisplayUnitType.DUT_METERS);
-            //var Ycon = UnitUtils.ConvertToInternalUnits(Y, DisplayUnitType.DUT_METERS);
-            //XYZ PointStart = new XYZ(Ycon, Xcon, 0);
             XYZ PointStart = new XYZ(Y, X, 0);
 
 
@@ -116,9 +110,6 @@ namespace _3DText_From_Alignment
             double.TryParse(PointEndARr[0], out XEnd);
             double.TryParse(PointEndARr[1], out YEnd);
 
-            //var XconEnd = UnitUtils.ConvertToInternalUnits(XEnd, DisplayUnitType.DUT_METERS);
-            //var YconEnd = UnitUtils.ConvertToInternalUnits(YEnd, DisplayUnitType.DUT_METERS);
-            //XYZ PointEnd = new XYZ(YconEnd, XconEnd, 0);
             XYZ PointEnd = new XYZ(YEnd, XEnd, 0);
 
             var LineLength = LineItem.length;
@@ -129,31 +120,67 @@ namespace _3DText_From_Alignment
             return StationStart;
         }
 
-        private static void ExtractHeightsFromProfile(List<TextObject> TextObjectFromLandXml, HermiteSpline HermitCurve)
+        private static void ExtractHeightsFromProfile(List<TextObject> TextObjectFromLandXml, List<XYZ> HeighPoints)
         {
             for (int i = 0; i < TextObjectFromLandXml.Count; i++)
             {
-                var R = HermitCurve.Project(new XYZ(TextObjectFromLandXml[i].StationText, 0, 0));
-                LineX L = LineX.CreateUnbound(new XYZ(TextObjectFromLandXml[i].StationText, 0, 0), new XYZ(TextObjectFromLandXml[i].StationText, 0, 1));
+                var XStationStart = TextObjectFromLandXml[i].StationStart;
+                var XStationEnd = TextObjectFromLandXml[i].StationStart;
 
-                IntersectionResultArray Result = null;
-                HermitCurve.Intersect(L, out Result);
-                //var XAcon = UnitUtils.ConvertToInternalUnits(R.XYZPoint.Z, DisplayUnitType.DUT_METERS);
-                //TextObjectFromLandXml[i].PointInsert = new XYZ(TextObjectFromLandXml[i].PointInsert.X, TextObjectFromLandXml[i].PointInsert.Y, XAcon);
-                TextObjectFromLandXml[i].PointInsert = new XYZ(TextObjectFromLandXml[i].PointInsert.X, TextObjectFromLandXml[i].PointInsert.Y, R.XYZPoint.Z);
+                for (int J = 0; J < HeighPoints.Count; J++)
+                {
+                    if (HeighPoints[J].X > XStation)
+                    {
+                        //var STABeforeX = HeighPoints[J - 1].X;
+                        //var STAAfterX = HeighPoints[J].X;
+                        //var STABeforeZ = HeighPoints[J - 1].Z;
+                        //var STAAfterZ = HeighPoints[J].Z;
 
-                var R2 = HermitCurve.Project(new XYZ(TextObjectFromLandXml[i].StationEnd, 0, 0));
+                        //var TrianleBottom = STAAfterZ - STABeforeZ;
+                        //var TriangleSide = STAAfterX - STABeforeX;
 
-                var Parameter = TextObjectFromLandXml[i].StationEnd / HermitCurve.Length;
-                var Test = HermitCurve.Evaluate(Parameter,true);
+                        //var ZAtPoint = ((XStation - STABeforeX) / TriangleSide) * TrianleBottom;
 
-                LineX L2 = LineX.CreateUnbound(new XYZ(TextObjectFromLandXml[i].StationEnd, 0, 0), new XYZ(TextObjectFromLandXml[i].StationEnd, 0, 100));
+                        LineX LL = LineX.CreateBound(HeighPoints[J - 1], HeighPoints[J]);
+                        var point = LL.Evaluate((XStation - HeighPoints[J - 1].X) / LL.Length, true);
+                        TextObjectFromLandXml[i].PointInsert = new XYZ(TextObjectFromLandXml[i].PointInsert.X, TextObjectFromLandXml[i].PointInsert.Y, point.Z);
 
-                IntersectionResultArray Result2 = null;
-                HermitCurve.Intersect(L2, out Result2);
-                //var XAcon2 = UnitUtils.ConvertToInternalUnits(R2.XYZPoint.Z, DisplayUnitType.DUT_METERS);
-                //TextObjectFromLandXml[i].PointEnd = new XYZ(TextObjectFromLandXml[i].PointEnd.X, TextObjectFromLandXml[i].PointEnd.Y, XAcon2);
-                TextObjectFromLandXml[i].PointEnd = new XYZ(TextObjectFromLandXml[i].PointEnd.X, TextObjectFromLandXml[i].PointEnd.Y, R2.XYZPoint.Z);
+                        break;
+
+                    }
+                }
+                //var R = HermitCurve.Project(new XYZ(TextObjectFromLandXml[i].StationText, 0, 0));
+                //LineX L = LineX.CreateUnbound(new XYZ(TextObjectFromLandXml[i].StationText, 0, 0), new XYZ(TextObjectFromLandXml[i].StationText, 0, 1));
+
+                //IntersectionResultArray Result = null;
+                //HermitCurve.Intersect(L, out Result);
+                ////var XAcon = UnitUtils.ConvertToInternalUnits(R.XYZPoint.Z, DisplayUnitType.DUT_METERS);
+                ////TextObjectFromLandXml[i].PointInsert = new XYZ(TextObjectFromLandXml[i].PointInsert.X, TextObjectFromLandXml[i].PointInsert.Y, XAcon);
+                //TextObjectFromLandXml[i].PointInsert = new XYZ(TextObjectFromLandXml[i].PointInsert.X, TextObjectFromLandXml[i].PointInsert.Y, R.XYZPoint.Z);
+
+                //var R2 = HermitCurve.Project(new XYZ(TextObjectFromLandXml[i].StationEnd, 0, 0));
+
+                //var Parameter = TextObjectFromLandXml[i].StationEnd / HermitCurve.Length;
+                //var Test = HermitCurve.Evaluate(Parameter,true);
+
+                //LineX L2 = LineX.CreateUnbound(new XYZ(TextObjectFromLandXml[i].StationEnd, 0, 0), new XYZ(TextObjectFromLandXml[i].StationEnd, 0, 100));
+
+                //IntersectionResultArray Result2 = null;
+                //HermitCurve.Intersect(L2, out Result2);
+                ////var XAcon2 = UnitUtils.ConvertToInternalUnits(R2.XYZPoint.Z, DisplayUnitType.DUT_METERS);
+                ////TextObjectFromLandXml[i].PointEnd = new XYZ(TextObjectFromLandXml[i].PointEnd.X, TextObjectFromLandXml[i].PointEnd.Y, XAcon2);
+                //TextObjectFromLandXml[i].PointEnd = new XYZ(TextObjectFromLandXml[i].PointEnd.X, TextObjectFromLandXml[i].PointEnd.Y, R2.XYZPoint.Z);
+
+                //var Param = TextObjectFromLandXml[i].StationEnd;
+                //HermitCurve.Evaluate(Param, false);
+
+                //var Param1 = TextObjectFromLandXml[i].StationEnd / HermitCurve.Length;
+                //HermitCurve.Evaluate(Param1, true);
+
+                //var Param11 = TextObjectFromLandXml[i].StationEnd / HermitCurve.ApproximateLength;
+                //HermitCurve.Evaluate(Param11, true);
+
+
             }
         }
         private static void ExtractHeightsFromLandXml(Alignment Alignment, List<XYZ> HeighPoints)
@@ -187,7 +214,7 @@ namespace _3DText_From_Alignment
 
             return Schema;
         }
-        private void AddTextFamilies((List<TextObject>, HermiteSpline) obects)
+        private void AddTextFamilies((List<TextObject>, List<XYZ>) obects)
         {
             string FamilyName = "3DAlignment_Tool";
 
@@ -205,7 +232,7 @@ namespace _3DText_From_Alignment
                 }
                 try
                 {
-                   
+
                     AcheStationingAndFamilyInsert(obects, FamilyName);
 
                 }
@@ -218,7 +245,7 @@ namespace _3DText_From_Alignment
             }
         }
 
-        private void AcheStationingAndFamilyInsert((List<TextObject>, HermiteSpline) obects, string FamilyName)
+        private void AcheStationingAndFamilyInsert((List<TextObject>, List<XYZ>) obects, string FamilyName)
         {
             foreach (TextObject Object in obects.Item1)
             {
@@ -246,14 +273,15 @@ namespace _3DText_From_Alignment
             FamilyInstance FamIns = null;
             if (last)
             {
-                FamIns = InsertLastFamilyInstance(Object, Angle, Fam);
+                FamIns = InsertLastFamilyInstance(Object.ConvertInsertpointsToInternal(), Angle, Fam);
             }
-            else
-            {
-                FamIns = InsertFamilyInstance(Object, Angle, Fam);
-            }
+            //else
+            //{
+            //    FamIns = InsertFamilyInstance(Object, Angle, Fam);
+            //}
         }
-        private void InsertFamilyAtStation(TextObject Object, string FamilyName, HermiteSpline HermitCurve)
+
+        private void InsertFamilyAtStation(TextObject Object, string FamilyName, List<XYZ> HermitCurve)
         {
             double Angle = ModifyRotationAngle(Object);
 
@@ -264,8 +292,8 @@ namespace _3DText_From_Alignment
 
 
             //sHOULD cONVERT
-            
-            FamIns = InsertFamilyInstance(Object.ConvertToInternal(), Angle, Fam);
+
+            FamIns = InsertFamilyInstance(Object.ConvertInsertpointsToInternal(), Angle, Fam);
 
             if (string.IsNullOrEmpty(this.StationDistanceTxt.Text))
             {
@@ -280,20 +308,20 @@ namespace _3DText_From_Alignment
             for (double i = StationIncementConv; i < L.Length; i += StationIncementConv)
             {
                 //error
-                TextObject MidPointTE = CreateMidPoint(Object, HermitCurve, L, StationIncrement, J, i);
+                //TextObject MidPointTE = CreateMidPoint(Object, HermitCurve, L, StationIncrement, J, i);
 
-                FamIns = InsertFamilyInstance(MidPointTE, Angle, Fam);
+                //FamIns = InsertFamilyInstance(MidPointTE, Angle, Fam);
 
-                if (StationIncementConv == 0)
-                {
-                    return;
-                }
-                J++;
+                //if (StationIncementConv == 0)
+                //{
+                //    return;
+                //}
+                //J++;
             }
 
         }
 
-        private static TextObject CreateMidPoint(TextObject Object, HermiteSpline HermitCurve, LineX L, double StationIncrement, int J, double i)
+        private static TextObject CreateMidPoint(TextObject Object, Autodesk.Revit.DB.Curve HermitCurve, LineX L, double StationIncrement, int J, double i)
         {
             var MidPointTE = new TextObject(Object);
             MidPointTE.PointInsert = L.Evaluate(i, false);
