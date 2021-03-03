@@ -140,11 +140,11 @@ namespace _3DText_From_Alignment
                 var InsertPoint = TextObject.PointInsert;
                 if (J == 0)
                 {
-                    Cond = ExtrachtHeightForStation(ref InsertPoint, XStationStart,TextObject.LineLength ,HeighPoints[J], null);
+                    Cond = ExtrachtHeightForStation(ref InsertPoint, XStationStart ,HeighPoints[J], null);
                 }
                 else
                 {
-                    Cond = ExtrachtHeightForStation(ref InsertPoint, XStationStart, TextObject.LineLength, HeighPoints[J], HeighPoints[J - 1]);
+                    Cond = ExtrachtHeightForStation(ref InsertPoint, XStationStart, HeighPoints[J], HeighPoints[J - 1]);
                 }
                 TextObject.PointInsert = InsertPoint;
                 if (Cond)
@@ -160,11 +160,11 @@ namespace _3DText_From_Alignment
                 bool Cond = false;
                 if (J == 0)
                 {
-                    Cond = ExtrachtHeightForStation(ref InsertEnd, XStationEnd, TextObject.LineLength, HeighPoints[J], null);
+                    Cond = ExtrachtHeightForStation(ref InsertEnd, XStationEnd, HeighPoints[J], null);
                 }
                 else
                 {
-                    Cond = ExtrachtHeightForStation(ref InsertEnd, XStationEnd, TextObject.LineLength, HeighPoints[J], HeighPoints[J - 1]);
+                    Cond = ExtrachtHeightForStation(ref InsertEnd, XStationEnd, HeighPoints[J], HeighPoints[J - 1]);
                 }
                 TextObject.PointEnd = InsertEnd;
                 if (Cond)
@@ -175,7 +175,7 @@ namespace _3DText_From_Alignment
             }
         }
 
-        private static bool ExtrachtHeightForStation(ref XYZ PointToFill, double StationToStudy, double lineLength, XYZ HeightPoint, XYZ PointBeforeIt = null)
+        private static bool ExtrachtHeightForStation(ref XYZ PointToFill, double StationToStudy, XYZ HeightPoint, XYZ PointBeforeIt = null)
         {
             if (HeightPoint.X == StationToStudy)
             {
@@ -192,7 +192,7 @@ namespace _3DText_From_Alignment
                         XYZ Vector = HeightPoint - PointBeforeIt;
                         var Angle = XYZ.BasisX.AngleTo(Vector) * 180/Math.PI;
                         var XPoint = (StationToStudy - PointBeforeIt.X);
-                        var point = LL.Evaluate((XPoint / lineLength), true);
+                        var point = LL.Evaluate((XPoint / (HeightPoint.X - PointBeforeIt.X)), true);
                         PointToFill = new XYZ(PointToFill.X, PointToFill.Y, point.Z );
                     }
                     return true;
@@ -284,13 +284,21 @@ namespace _3DText_From_Alignment
             Fam.Activate();
 
             LineX L = LineX.CreateBound(Object.PointInsert, Object.PointEnd);
+            double LineLength = Object.StationEnd - Object.StationStart;
             int J = 1;
-            for (double i = StationIncrement; i < (L.Length - StationIncrement); i += StationIncrement)
+            for (double i = StationIncrement; i < (LineLength); i += StationIncrement)
             {
-                TextObject MidPointTE = CreateMidPoint(Object, HeightPoints, L, StationIncrement, J, i);
+                try
+                {
+                    TextObject MidPointTE = CreateMidPoint(Object, HeightPoints, L, StationIncrement, J, i);
+                    FamilyInstance FamIns = null;
+                    FamIns = InsertFamilyInstance(MidPointTE.ConvertInsertpointsToInternal(), Angle, Fam);
 
-                FamilyInstance FamIns = null;
-                FamIns = InsertFamilyInstance(MidPointTE.ConvertInsertpointsToInternal(), Angle, Fam);
+                }
+                catch (Exception  ee)
+                {
+                    
+                }
 
                 if (StationIncrement == 0)
                 {
@@ -341,8 +349,7 @@ namespace _3DText_From_Alignment
             var MidPointTE = new TextObject(Object);
 
             var StationText = (MidPointTE.StationStart + (StationIncrement * J));
-            var StationXRatio = (StationIncrement * J) / Object.LineLength;
-            
+            var StationXRatio = (StationIncrement * J) / (Object.StationEnd - Object.StationStart);
             MidPointTE.PointInsert = L.Evaluate(StationXRatio, true);
             MidPointTE.StationText = StationText;
             ExtractHeightForTextObkect(MidPointTE, HeightPoints, StationText, MidPointTE.StationEnd);
