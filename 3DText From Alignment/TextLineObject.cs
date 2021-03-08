@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace _3DText_From_Alignment
 {
-    internal class TextObject
+    internal class TextLineObject
     {
-        public TextObject(double stationStart, double stationEnd, double stationText, XYZ pointInsert, XYZ pointEnd, double lineLength)
+        public TextLineObject(double stationStart, double stationEnd, double stationText, XYZ pointInsert, XYZ pointEnd, double lineLength)
         {
             StationStart = stationStart;
             StationEnd = stationEnd;
@@ -22,7 +22,7 @@ namespace _3DText_From_Alignment
         public XYZ PointEnd { get; set; }
         public double LineLength { get; set; }
 
-        public TextObject(TextObject OBJ)
+        public TextLineObject(TextLineObject OBJ)
         {
             StationStart = OBJ.StationStart;
             StationEnd = OBJ.StationEnd;
@@ -31,12 +31,12 @@ namespace _3DText_From_Alignment
             PointEnd = OBJ.PointEnd;
             LineLength = OBJ.LineLength;
         }
-        public TextObject ConvertInsertpointsToInternal()
+        public TextLineObject ConvertInsertpointsToInternal()
         {
              var PointInsert = new XYZ(UnitUtils.ConvertToInternalUnits(this.PointInsert.X, DisplayUnitType.DUT_METERS), UnitUtils.ConvertToInternalUnits(this.PointInsert.Y, DisplayUnitType.DUT_METERS), UnitUtils.ConvertToInternalUnits(this.PointInsert.Z, DisplayUnitType.DUT_METERS));
              var PointEnd = new XYZ(UnitUtils.ConvertToInternalUnits(this.PointEnd.X, DisplayUnitType.DUT_METERS), UnitUtils.ConvertToInternalUnits(this.PointEnd.Y, DisplayUnitType.DUT_METERS), UnitUtils.ConvertToInternalUnits(this.PointEnd.Z, DisplayUnitType.DUT_METERS));
             //var LineLength = UnitUtils.ConvertToInternalUnits(this.LineLength, DisplayUnitType.DUT_METERS);
-            return new TextObject(this.StationStart, this.StationEnd, this.StationText, PointInsert, PointEnd, LineLength);
+            return new TextLineObject(this.StationStart, this.StationEnd, this.StationText, PointInsert, PointEnd, LineLength);
         }
 
     }

@@ -67,7 +67,7 @@
     <Compile Include="TextAlignment.xaml.cs">
       <DependentUpon>TextAlignment.xaml</DependentUpon>
     </Compile>
-    <Compile Include="TextObject.cs" />
+    <Compile Include="TextLineObject.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="3DText From Alignment.addin" />
