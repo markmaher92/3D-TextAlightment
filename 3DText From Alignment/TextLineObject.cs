@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace _3DText_From_Alignment
 {
-    internal class TextLineObject
+    internal class TextLineObject : TextObjects
     {
         public TextLineObject(double stationStart, double stationEnd, double stationText, XYZ pointInsert, XYZ pointEnd, double lineLength)
         {
@@ -15,9 +15,7 @@ namespace _3DText_From_Alignment
             LineLength = lineLength;
         }
 
-        public double StationStart { get; set; }
-        public double StationEnd { get; set; }
-        public double StationText { get; set; }
+      
         public XYZ PointInsert { get; set; }
         public XYZ PointEnd { get; set; }
         public double LineLength { get; set; }

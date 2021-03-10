@@ -44,9 +44,9 @@ namespace _3DText_From_Alignment
         }
 
 
-        private (List<TextLineObject>, List<XYZ>) ExtractFromLandXML(string landXmlPath)
+        private (List<TextObjects>, List<XYZ>) ExtractFromLandXML(string landXmlPath)
         {
-            List<TextLineObject> TextObjectFromLandXml = new List<TextLineObject>();
+            List<TextObjects> TextObjectFromLandXml = new List<TextObjects>();
             List<XYZ> HeighPoints = new List<XYZ>();
 
 
@@ -54,7 +54,7 @@ namespace _3DText_From_Alignment
             return (TextObjectFromLandXml, HeighPoints);
         }
 
-        private static void RunProgram(List<TextLineObject> TextObjectFromLandXml, List<XYZ> HeighPoints, string LandXmlPath)
+        private void RunProgram(List<TextObjects> TextObjectFromLandXml, List<XYZ> HeighPoints, string LandXmlPath)
         {
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.Load(LandXmlPath);
@@ -79,7 +79,7 @@ namespace _3DText_From_Alignment
                             }
                             if (LineItem is Curve)
                             {
-                                StationStart = ExtractLandXmlCurve(TextObjectFromLandXml, StationStart , LineItem as Curve);
+                                StationStart = ExtractLandXmlCurve(TextObjectFromLandXml, StationStart, LineItem as Curve);
                             }
                         }
 
@@ -93,16 +93,49 @@ namespace _3DText_From_Alignment
             }
         }
 
-        private static double ExtractLandXmlCurve(List<TextLineObject> textObjectFromLandXml, double stationStart, Curve curve)
+        private double ExtractLandXmlCurve(List<TextObjects> textObjectFromLandXml, double stationStart, Curve Cs)
         {
-            var LS = curve.staStart;
-            var Point = curve
+            var LS = Cs.staStart;
+            var StartPoint = (Cs.Items[0] as PointType).Text;
+            var CenterPoint = (Cs.Items[1] as PointType).Text;
+            var EndPoint = (Cs.Items[2] as PointType).Text;
+
+            XYZ PointPI = null;
+            if (Cs.Items.Count() > 3)
+            {
+                var PI = (Cs.Items[3] as PointType).Text;
+                PointPI = ExtractPoint(PI);
+                var Radius = Cs.radius;
+                var CurveLength = Cs.length;
+
+                double stationEnd = stationStart + Cs.length;
+
+                XYZ PointStart = ExtractPoint(StartPoint);
+                XYZ PointCenter = ExtractPoint(CenterPoint);
+                XYZ PointEnd = ExtractPoint(EndPoint);
+
+                TextCurveObject CUrveEle = new TextCurveObject(stationStart, stationEnd, stationStart, PointStart, PointCenter, PointEnd, PointPI, Radius, CurveLength);
+                var ElementCnv = CUrveEle.ConvertInsertpointsToInternal();
+                Arc HS = Arc.Create(ElementCnv.PointStart, ElementCnv.PointEnd, ElementCnv.PointPI);
+
+                Arc Arcy = Arc.Create()
+               
+                textObjectFromLandXml.Add(CUrveEle);
+
+                using (Transaction se = new Transaction(uiDoc.Document, "New Tra"))
+                {
+                    se.Start();
+                    uiDoc.Document.Create.NewDetailCurve(uiDoc.ActiveView, HS);
+                    se.Commit();
+                }
+            }
+
+            return stationStart;
         }
 
-        private static double ExtractLandXmlLine(List<TextLineObject> TextObjectFromLandXml, double StationStart, Line LineItem)
+        private static double ExtractLandXmlLine(List<TextObjects> TextObjectFromLandXml, double StationStart, Line LineItem)
         {
             var Ls = LineItem.staStart;
-
             var Point = LineItem.Start.Text;
             XYZ PointStart = ExtractPoint(Point);
 
@@ -131,59 +164,63 @@ namespace _3DText_From_Alignment
             return PointStart;
         }
 
-        private static void ExtractHeightsFromProfile(List<TextLineObject> TextObjectFromLandXml, List<XYZ> HeighPoints)
+        private static void ExtractHeightsFromProfile(List<TextObjects> TextObjectFromLandXml, List<XYZ> HeighPoints)
         {
             for (int i = 0; i < TextObjectFromLandXml.Count; i++)
             {
                 var XStationStart = TextObjectFromLandXml[i].StationStart;
-
                 var XStationEnd = TextObjectFromLandXml[i].StationEnd;
 
                 ExtractHeightForTextObkect(TextObjectFromLandXml[i], HeighPoints, XStationStart, XStationEnd);
             }
         }
 
-        private static void ExtractHeightForTextObkect(TextLineObject TextObject, List<XYZ> HeighPoints, double XStationStart, double XStationEnd)
+        private static void ExtractHeightForTextObkect(TextObjects TextObject, List<XYZ> HeighPoints, double XStationStart, double XStationEnd)
         {
-            for (int J = 0; J < HeighPoints.Count; J++)
+            if (TextObject is Line)
             {
-                bool Cond = false;
-                var InsertPoint = TextObject.PointInsert;
-                if (J == 0)
-                {
-                    Cond = ExtrachtHeightForStation(ref InsertPoint, XStationStart, HeighPoints[J], null);
-                }
-                else
-                {
-                    Cond = ExtrachtHeightForStation(ref InsertPoint, XStationStart, HeighPoints[J], HeighPoints[J - 1]);
-                }
-                TextObject.PointInsert = InsertPoint;
-                if (Cond)
-                {
-                    break;
-                }
 
+                for (int J = 0; J < HeighPoints.Count; J++)
+                {
+                    var InsertPoint = (TextObject as TextLineObject).PointInsert;
+
+                    bool Cond = HeightExtraction(HeighPoints, XStationStart, J, ref InsertPoint);
+
+                    (TextObject as TextLineObject).PointInsert = InsertPoint;
+                    if (Cond)
+                    {
+                        break;
+                    }
+
+                }
+                for (int J = 0; J < HeighPoints.Count; J++)
+                {
+                    var InsertEnd = (TextObject as TextLineObject).PointEnd;
+                    bool Cond = HeightExtraction(HeighPoints, XStationEnd, J, ref InsertEnd);
+                    (TextObject as TextLineObject).PointEnd = InsertEnd;
+
+                    if (Cond)
+                    {
+                        break;
+                    }
+
+                }
             }
-            for (int J = 0; J < HeighPoints.Count; J++)
+        }
+
+        private static bool HeightExtraction(List<XYZ> HeighPoints, double XStationStart, int J, ref XYZ InsertPoint)
+        {
+            bool Cond;
+            if (J == 0)
             {
-                var InsertEnd = TextObject.PointEnd;
-
-                bool Cond = false;
-                if (J == 0)
-                {
-                    Cond = ExtrachtHeightForStation(ref InsertEnd, XStationEnd, HeighPoints[J], null);
-                }
-                else
-                {
-                    Cond = ExtrachtHeightForStation(ref InsertEnd, XStationEnd, HeighPoints[J], HeighPoints[J - 1]);
-                }
-                TextObject.PointEnd = InsertEnd;
-                if (Cond)
-                {
-                    break;
-                }
-
+                Cond = ExtrachtHeightForStation(ref InsertPoint, XStationStart, HeighPoints[J], null);
             }
+            else
+            {
+                Cond = ExtrachtHeightForStation(ref InsertPoint, XStationStart, HeighPoints[J], HeighPoints[J - 1]);
+            }
+
+            return Cond;
         }
 
         private static bool ExtrachtHeightForStation(ref XYZ PointToFill, double StationToStudy, XYZ HeightPoint, XYZ PointBeforeIt = null)
@@ -243,8 +280,8 @@ namespace _3DText_From_Alignment
 
             return Schema;
         }
-      
-        private void AddTextFamilies((List<TextLineObject>, List<XYZ>) obects)
+
+        private void AddTextFamilies((List<TextObjects>, List<XYZ>) obects)
         {
             string FamilyName = "3DAlignment_Tool";
 
@@ -275,7 +312,7 @@ namespace _3DText_From_Alignment
             }
         }
 
-        private void AcheStationingAndFamilyInsert((List<TextLineObject>, List<XYZ>) obects, string FamilyName)
+        private void AcheStationingAndFamilyInsert((List<TextObjects>, List<XYZ>) obects, string FamilyName)
         {
             double LastLineLength = 0;
             for (int i = 0; i < obects.Item1.Count; i++)
@@ -286,7 +323,7 @@ namespace _3DText_From_Alignment
                 {
                     LastLineLength = obects.Item1[i - 1].StationEnd;
                 }
-                InsertElementsBetweenStations(obects.Item1[i], obects.Item2, FamilyName, LastLineLength);
+                InsertElementsBetweenStations(obects.Item1[i] as TextLineObject, obects.Item2, FamilyName, LastLineLength);
 
             }
             InsertFamilyAtStation(obects.Item1.Last(), FamilyName, true);
@@ -340,7 +377,7 @@ namespace _3DText_From_Alignment
             ExtractHeightForTextObkect(MidPointTE, HeightPoints, StationText, MidPointTE.StationEnd);
             return MidPointTE;
         }
-        
+
         private static TextLineObject CreateMidPoint1(TextLineObject Object, List<XYZ> HeightPoints, LineX L, double i)
         {
             var MidPointTE = new TextLineObject(Object);
@@ -363,7 +400,7 @@ namespace _3DText_From_Alignment
             return StationIncrement;
         }
 
-        private void InsertFamilyAtStation(TextLineObject Object, string FamilyName, bool last)
+        private void InsertFamilyAtStation(TextObjects Object, string FamilyName, bool last)
         {
             double Angle = ModifyRotationAngle(Object);
 
@@ -376,21 +413,21 @@ namespace _3DText_From_Alignment
             //sHOULD cONVERT
             if (last)
             {
-                FamIns = InsertLastFamilyInstance(Object.ConvertInsertpointsToInternal(), Angle, Fam);
+                FamIns = InsertLastFamilyInstance((Object as TextLineObject).ConvertInsertpointsToInternal(), Angle, Fam);
 
             }
             else
             {
-                FamIns = InsertFamilyInstance(Object.ConvertInsertpointsToInternal(), Angle, Fam);
+                FamIns = InsertFamilyInstance((Object as TextLineObject).ConvertInsertpointsToInternal(), Angle, Fam);
             }
 
 
 
         }
 
-        private double ModifyRotationAngle(TextLineObject Object)
+        private double ModifyRotationAngle(TextObjects Object)
         {
-            XYZ NormalVector = (Object.PointEnd - Object.PointInsert).Normalize();
+            XYZ NormalVector = ((Object as TextLineObject).PointEnd - (Object as TextLineObject).PointInsert).Normalize();
             double Angle = (Math.PI / 2) - NormalVector.AngleTo(XYZ.BasisX);
             try
             {
