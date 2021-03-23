@@ -63,13 +63,17 @@
     <Compile Include="App.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="LandXML-1_2_debugged.cs" />
+    <Compile Include="ProfileAlignElement.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RevitHelper.cs" />
     <Compile Include="TextAlignment.xaml.cs">
       <DependentUpon>TextAlignment.xaml</DependentUpon>
     </Compile>
     <Compile Include="TextLCurveObject.cs" />
     <Compile Include="TextLineObject.cs" />
-    <Compile Include="TextObjects.cs" />
+    <Compile Include="LandXmlAlignmentObjects.cs" />
+    <Compile Include="WindowDialogs.cs" />
+    <Compile Include="XmlParserLandXml.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="3DText From Alignment.addin" />

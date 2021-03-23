@@ -13,7 +13,7 @@
         <TextBox Height="24" Margin="219,0,10,155" TextWrapping="Wrap" Text="100" VerticalAlignment="Bottom" Name="HorizontalDistancetext"/>
         <Label Content="Distance Between Stations : m" Margin="6,0,136,181" Height="26" VerticalAlignment="Bottom"/>
         <Label Content="Horitzonal Distance : mm" Margin="6,0,132,153" Height="26" VerticalAlignment="Bottom"/>
-        <Button Content="Run" Margin="0,0,5,10" Click="Button_Click" Height="21" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="114" RenderTransformOrigin="0.513,0.8" Grid.Column="1">
+        <Button Content="Run" Margin="0,0,5,10" Click="Run_click" Height="21" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="114" RenderTransformOrigin="0.513,0.8" Grid.Column="1">
             <Button.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform/>
@@ -28,7 +28,7 @@
         <Label Content="Elevation From Line : mm" Margin="6,0,152,127" Height="26" VerticalAlignment="Bottom"/>
         <TextBox Height="24" Margin="219,0,10,126" TextWrapping="Wrap" Text="0" VerticalAlignment="Bottom" x:Name="ElevationTxt"/>
         <TextBox Margin="8,0,53,213" TextWrapping="Wrap" Text="" x:Name="FamilyPath" Height="18" VerticalAlignment="Bottom" />
-        <Button Content="..." Margin="0,0,10,213" Click="Button_Click_1" HorizontalAlignment="Right" Width="38" Height="18" VerticalAlignment="Bottom"/>
+        <Button Content="..." Margin="0,0,10,213" Click="RevitBrowserClick" HorizontalAlignment="Right" Width="38" Height="18" VerticalAlignment="Bottom"/>
         <Label Content="Select Family Path" HorizontalAlignment="Left" Margin="6,0,0,208" Width="118" Height="27" VerticalAlignment="Bottom"/>
         <Label Content="Rotation Angle in Plane: Degrees" Margin="8,0,128,96" Height="26" VerticalAlignment="Bottom"/>
         <TextBox Height="24" Margin="219,0,10,95" TextWrapping="Wrap" Text="0" VerticalAlignment="Bottom" x:Name="DegreesTxt"/>
