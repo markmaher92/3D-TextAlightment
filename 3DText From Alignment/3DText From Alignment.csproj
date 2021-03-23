@@ -66,6 +66,7 @@
     <Compile Include="ProfileAlignElement.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RevitHelper.cs" />
+    <Compile Include="RevitPlacmenElement.cs" />
     <Compile Include="TextAlignment.xaml.cs">
       <DependentUpon>TextAlignment.xaml</DependentUpon>
     </Compile>

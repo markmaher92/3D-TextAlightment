@@ -23,8 +23,6 @@
                 </TransformGroup>
             </Button.RenderTransform>
         </Button>
-        <!--<Label Content="Starting Station : m" Margin="6,0,137,215.333" Height="26" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>-->
-        <!--<TextBox Height="24" Margin="145.667,0,10,217.333" TextWrapping="Wrap" Text="" VerticalAlignment="Bottom" x:Name="StartingStationTxt" Grid.Column="1"/>-->
         <Label Content="Elevation From Line : mm" Margin="6,0,152,127" Height="26" VerticalAlignment="Bottom"/>
         <TextBox Height="24" Margin="219,0,10,126" TextWrapping="Wrap" Text="0" VerticalAlignment="Bottom" x:Name="ElevationTxt"/>
         <TextBox Margin="8,0,53,213" TextWrapping="Wrap" Text="" x:Name="FamilyPath" Height="18" VerticalAlignment="Bottom" />

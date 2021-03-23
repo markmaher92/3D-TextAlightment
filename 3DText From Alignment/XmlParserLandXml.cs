@@ -23,56 +23,51 @@ namespace _3DText_From_Alignment
             return Schema;
         }
 
-        public static double ExtractLandXmlCoordGeom(List<LandXmlAlignmentObjects> TextObjectFromLandXml, double StationStart, object LineItem)
-        {
-            if (LineItem is Line)
-            {
-                StationStart = ExtractLandXmlLine(TextObjectFromLandXml, StationStart, (LineItem as Line));
-
-            }
-            if (LineItem is Curve)
-            {
-                StationStart = ExtractLandXmlCurve(TextObjectFromLandXml, StationStart, LineItem as Curve);
-            }
-
-            return StationStart;
-        }
-        public static List<LandXmlAlignmentObjects> ParseLandXml(string LandXmlPath)
+       
+        public static List<RevitPlacmenElement> ParseLandXml(string LandXmlPath)
         {
             LandXML Landx = XmlParserLandXml.Deserialize(LandXmlPath);
-            List<LandXmlAlignmentObjects> LandXmlTextObjects  = ExtractLandXmlObjects(Landx);
-            
-            return LandXmlTextObjects;
+            List<RevitPlacmenElement> RevitPlacmentPoints  = ExtractPlacementPoints(Landx);
+            return RevitPlacmentPoints;
         }
 
-        private static List<LandXmlAlignmentObjects> ExtractLandXmlObjects(LandXML Landx)
+        private static List<RevitPlacmenElement> ExtractPlacementPoints(LandXML Landx, double StationIncrement)
         {
-            List<LandXmlAlignmentObjects> LandXmlTextObjects = new List<LandXmlAlignmentObjects>();
+            List<RevitPlacmenElement> RevitPlacementPoints = new List<RevitPlacmenElement>();
+
             foreach (Alignments Alignments in Landx.Items.OfType<Alignments>())
             {
                 foreach (var Alignment in Alignments.Alignment)
                 {
-                    var StationStart = Alignment.staStart;
-
+                    var StartStation = Alignment.staStart;
+                    for (double i = StartStation; i <= Alignment.length + StartStation; i +=  StationIncrement)
+                    {
+                        var Station = 
+                    }
+                    var StartStation = StartStation + 
                     foreach (CoordGeom CoordGeom in Alignment.Items.OfType<CoordGeom>())
                     {
+                        var CurrentStation = StationStart;
                         foreach (object CoordGeoItem in CoordGeom.Items)
                         {
-                            StationStart = XmlParserLandXml.ExtractLandXmlCoordGeom(LandXmlTextObjects, StationStart, CoordGeoItem);
-                            ExtractPointHeight(Alignment);
+                            
+                            var NextStation = XmlParserLandXml.ExtractRevitPlacementPoints(RevitPlacementPoints , StationStart, CoordGeoItem);
+                            ExtractPointHeight(Alignment, StationStart);
                         }
 
                     }
-                
-                  // ExtractHeightsFromLandXml(Alignment, HeighPoints);
-                  // ExtractHeightsFromProfile(LandXmlTextObjects, HeighPoints);
                 }
             }
 
             return LandXmlTextObjects;
         }
 
-        private static void ExtractPointHeight(Alignment Alignment)
+        private static double ExtractRevitPlacementPoints(List<RevitPlacmenElement> revitPlacementPoints, double stationStart, object coordGeoItem)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void ExtractPointHeight(Alignment Alignment, double stationStart)
         {
             foreach (var Profile in Alignment.Items.OfType<Profile>())
             {
@@ -114,7 +109,7 @@ namespace _3DText_From_Alignment
                     {
                         if (PVIItem is PVI)
                         {
-                            ExtractPVIPoint(HeighPoints, PVIItem);
+                            ExtractPVIPoint(PVIItem);
                         }
                         if (PVIItem is CircCurve)
                         {

@@ -156,7 +156,6 @@ namespace _3DText_From_Alignment
                 }
             }
         }
-       
         public static void PlaceRevitFamilies(List<LandXmlAlignmentObjects> obects, UIDocument uiDoc, String FamilyPath)
         {
             string FamilyName = "3DAlignment_Tool";
@@ -204,6 +203,5 @@ namespace _3DText_From_Alignment
             InsertFamilyAtStation(obects.Last(), FamilyName, true);
 
         }
-
     }
 }
