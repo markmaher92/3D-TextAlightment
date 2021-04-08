@@ -118,7 +118,6 @@ namespace _3DText_From_Alignment
                 var ElementCnv = CUrveEle.ConvertInsertpointsToInternal();
                 Arc HS = Arc.Create(ElementCnv.PointStart, ElementCnv.PointEnd, ElementCnv.PointPI);
 
-                Arc Arcy = Arc.Create()
                
                 textObjectFromLandXml.Add(CUrveEle);
 
